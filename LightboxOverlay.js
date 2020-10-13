@@ -79,12 +79,7 @@ export default class LightboxOverlay extends Component {
       },
       pan: new Animated.Value(0),
       openVal: new Animated.Value(0),
-      windowHeight: 0,
-      windowWidth: 0
     };
-
-    // force to update sizes
-    this.onDimensionsChange();
 
     this._panResponder = PanResponder.create({
       // Ask to be the responder:
@@ -99,10 +94,8 @@ export default class LightboxOverlay extends Component {
       },
       onPanResponderMove: Animated.event([
         null,
-        { dy: this.state.pan }
-      ], {
-        useNativeDriver: true
-      }),
+        { dy: this.state.pan, }
+      ]),
       onPanResponderTerminationRequest: (evt, gestureState) => true,
       onPanResponderRelease: (evt, gestureState) => {
         if(Math.abs(gestureState.dy) > DRAG_DISMISS_THRESHOLD) {
@@ -111,7 +104,7 @@ export default class LightboxOverlay extends Component {
             target: {
               y: gestureState.dy,
               x: gestureState.dx,
-              opacity: 1 - Math.abs(gestureState.dy / windowHeight)
+              opacity: 1 - Math.abs(gestureState.dy / height)
             }
           });
           this.close();
@@ -126,19 +119,19 @@ export default class LightboxOverlay extends Component {
   }
 
   getSizesStyle = () => {
-    const {windowWidth, windowHeight} = this.state;
+    const {height, width} = Dimensions.get('window');
 
-    return{
-      width: windowWidth,
-      height: windowHeight,
+    return{  
+      width: width,
+      height: height,
     }
   }
 
   getWidthStyle = () => {
-    const {windowWidth} = this.state;
+    const {height, width} = Dimensions.get('window');
 
-    return{
-      width: windowWidth,
+    return {
+      width: width,
     }
   }
 
@@ -146,19 +139,16 @@ export default class LightboxOverlay extends Component {
     if(this.props.isOpen) {
       this.open();
     }
-    Dimensions.addEventListener('change', this.onDimensionsChange);
+    Dimensions.addEventListener('change', this.onDimensionsChanged);
   }
 
   componentWillUnmount() {
-    Dimensions.removeEventListener("change", this.onDimensionsChange);
+    Dimensions.removeEventListener("change", this.onDimensionsChanged);
   }
 
-  onDimensionsChange = () => {
-    const {height, width} = Dimensions.get('window');
-
+  onDimensionsChanged = () => {
     this.setState({
-      windowHeight: height,
-      windowWidth: width
+      render: true
     });
   };
 
@@ -211,8 +201,8 @@ export default class LightboxOverlay extends Component {
   }
 
   render() {
-    const {windowWidth, windowHeight} = this.state;
-
+    const {height, width} = Dimensions.get('window');
+    
     const {
       isOpen,
       renderHeader,
@@ -242,14 +232,14 @@ export default class LightboxOverlay extends Component {
       dragStyle = {
         top: this.state.pan,
       };
-      lightboxOpacityStyle.opacity = this.state.pan.interpolate({inputRange: [-windowHeight, 0, windowHeight], outputRange: [0, 1, 0]});
+      lightboxOpacityStyle.opacity = this.state.pan.interpolate({inputRange: [-height, 0, height], outputRange: [0, 1, 0]});
     }
 
     const openStyle = [styles.open, {
       left:   openVal.interpolate({inputRange: [0, 1], outputRange: [origin.x, target.x]}),
       top:    openVal.interpolate({inputRange: [0, 1], outputRange: [origin.y + STATUS_BAR_OFFSET, target.y + STATUS_BAR_OFFSET]}),
-      width:  openVal.interpolate({inputRange: [0, 1], outputRange: [origin.width, windowWidth]}),
-      height: openVal.interpolate({inputRange: [0, 1], outputRange: [origin.height, windowHeight]}),
+      width:  openVal.interpolate({inputRange: [0, 1], outputRange: [origin.width, width]}),
+      height: openVal.interpolate({inputRange: [0, 1], outputRange: [origin.height, height]}),
     }];
 
     const background = (<Animated.View style={[styles.background, { backgroundColor: backgroundColor }, lightboxOpacityStyle, this.getSizesStyle()]}></Animated.View>);
