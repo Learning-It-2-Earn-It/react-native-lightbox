@@ -98,6 +98,7 @@ export default class LightboxOverlay extends Component {
       ]),
       onPanResponderTerminationRequest: (evt, gestureState) => true,
       onPanResponderRelease: (evt, gestureState) => {
+        const {height} = Dimensions.get('window');
         if(Math.abs(gestureState.dy) > DRAG_DISMISS_THRESHOLD) {
           this.setState({
             isPanning: false,
